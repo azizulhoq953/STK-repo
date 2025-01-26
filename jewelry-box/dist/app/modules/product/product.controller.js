@@ -23,6 +23,21 @@ exports.ProductController = {
             res.status(500).json({ error: errorMessage });
         }
     }),
+    findById: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const { id } = req.params; // Extract product ID from the URL
+        try {
+            const product = yield product_service_1.ProductService.findById(id); // Call the service to fetch the product
+            if (!product) {
+                return res.status(404).json({ message: "Product not found" });
+            }
+            res.status(200).json(product); // Return the product if found
+        }
+        catch (error) {
+            // Type-check the error to access `message` property
+            const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+            res.status(500).json({ error: errorMessage }); // Handle internal server errors
+        }
+    }),
     findAll: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const products = yield product_service_1.ProductService.findAll();

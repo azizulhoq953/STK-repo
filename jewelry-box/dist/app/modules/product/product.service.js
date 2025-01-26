@@ -1,6 +1,4 @@
 "use strict";
-// import { Product } from "./product.types";
-// import ProductModel from "../../models/Product";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -15,24 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductService = void 0;
-// export const ProductService = {
-//   create: async (productData: Product) => {
-//     const product = await ProductModel.create(productData);
-//     return product;
-//   },
-//   findAll: async () => {
-//     return await ProductModel.find();
-//   },
-//   findById: async (id: string) => {
-//     return await ProductModel.findById(id);
-//   },
-//   update: async (id: string, data: Partial<Product>) => {
-//     return await ProductModel.findByIdAndUpdate(id, data, { new: true });
-//   },
-//   delete: async (id: string) => {
-//     return await ProductModel.findByIdAndDelete(id);
-//   },
-// };
 const Product_1 = __importDefault(require("../../models/Product")); // Use default import
 exports.ProductService = {
     create: (productData) => __awaiter(void 0, void 0, void 0, function* () {
@@ -60,6 +40,34 @@ exports.ProductService = {
             }
             else {
                 throw new Error("Unknown error occurred while fetching products.");
+            }
+        }
+    }),
+    //   findById: async (id: string) => {
+    //     try {
+    //       // Find the product by ID in MongoDB
+    //       const product = await ProductModel.findById(id);
+    //       return product;  // If product is found, return it
+    //     } catch (error) {
+    //       throw new Error("Error fetching product: " + error.message);  // Handle errors
+    //     }
+    //   },
+    findById: (id) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            // Find the product by ID in MongoDB
+            const product = yield Product_1.default.findById(id);
+            if (!product) {
+                throw new Error("Product not found");
+            }
+            return product; // Return the product if found
+        }
+        catch (error) {
+            // Type-check the error to access `message` property
+            if (error instanceof Error) {
+                throw new Error("Error fetching product: " + error.message);
+            }
+            else {
+                throw new Error("Unknown error occurred while fetching product");
             }
         }
     }),

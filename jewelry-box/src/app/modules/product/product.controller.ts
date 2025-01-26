@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ProductService } from "./product.service";
 
 export const ProductController = {
@@ -7,26 +7,8 @@ export const ProductController = {
       const product = await ProductService.create(req.body);
       res.status(201).json(product);
     } catch (error) {
-      // Cast error to `Error` type to access `message`
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       res.status(500).json({ error: errorMessage });
-    }
-  },
-
-  
-
-findById: async (req: Request, res: Response) => {
-    const { id } = req.params; // Extract product ID from the URL
-    try {
-      const product = await ProductService.findById(id); // Call the service to fetch the product
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-      res.status(200).json(product);  // Return the product if found
-    } catch (error) {
-      // Type-check the error to access `message` property
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      res.status(500).json({ error: errorMessage });  // Handle internal server errors
     }
   },
 
@@ -39,7 +21,6 @@ findById: async (req: Request, res: Response) => {
       res.status(500).json({ error: errorMessage });
     }
   },
-
 
   update: async (req: Request, res: Response) => {
     try {
@@ -60,4 +41,42 @@ findById: async (req: Request, res: Response) => {
       res.status(500).json({ error: errorMessage });
     }
   },
+  // search: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const keyword = req.query.keyword as string;
+
+  //     if (!keyword) {
+  //       res.status(400).json({ message: "Please provide a search keyword." });
+  //       return;
+  //     }
+
+  //     const products = await ProductService.search(keyword);
+  //     res.status(200).json(products);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // },
+  search: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const keyword = req.query.keyword as string;
+  
+      if (!keyword) {
+        res.status(400).json({ message: "Please provide a search keyword." });
+        return;
+      }
+  
+      // Use the `name` or other relevant fields for the search query
+      const products = await ProductService.search(keyword);
+  
+      if (products.length === 0) {
+        res.status(404).json({ message: "No products found." });
+        return;
+      }
+  
+      res.status(200).json(products);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 };

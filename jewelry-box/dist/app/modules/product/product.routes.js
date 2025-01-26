@@ -1,10 +1,23 @@
 "use strict";
+// import { Router } from "express";
+// import { ProductController } from "./product.controller";
 Object.defineProperty(exports, "__esModule", { value: true });
+// const router = Router();
+// router.post("/", ProductController.create);
+// router.get("/", ProductController.findAll);
+// router.get("/:id", ProductController.findById);
+// router.put("/:id", ProductController.update);
+// router.delete("/:id", ProductController.delete);
+// export default router;
 const express_1 = require("express");
 const product_controller_1 = require("./product.controller");
+const auth_middleware_1 = require("../auth/auth.middleware"); // Import the middleware
 const router = (0, express_1.Router)();
-router.post("/", product_controller_1.ProductController.create);
+// Apply isAuthenticated for create, update, and delete routes
+router.post("/", auth_middleware_1.isAuthenticated, product_controller_1.ProductController.create); // Only admins can create products
+router.put("/:id", auth_middleware_1.isAuthenticated, product_controller_1.ProductController.update); // Only admins can update products
+router.delete("/:id", auth_middleware_1.isAuthenticated, product_controller_1.ProductController.delete); // Only admins can delete products
+// Public access to find all products and find by id
 router.get("/", product_controller_1.ProductController.findAll);
-router.put("/:id", product_controller_1.ProductController.update);
-router.delete("/:id", product_controller_1.ProductController.delete);
+router.get("/:id", product_controller_1.ProductController.findById);
 exports.default = router;

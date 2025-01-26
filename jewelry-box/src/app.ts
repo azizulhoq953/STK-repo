@@ -12,6 +12,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use("/api", router);
 app.use("/api/products", productRoutes);
+
 connectDB();
 
 export default app;
