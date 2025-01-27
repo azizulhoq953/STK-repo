@@ -1,14 +1,5 @@
 "use strict";
-// import { Router } from "express";
-// import { ProductController } from "./product.controller";
 Object.defineProperty(exports, "__esModule", { value: true });
-// const router = Router();
-// router.post("/", ProductController.create);
-// router.get("/", ProductController.findAll);
-// router.get("/:id", ProductController.findById);
-// router.put("/:id", ProductController.update);
-// router.delete("/:id", ProductController.delete);
-// export default router;
 const express_1 = require("express");
 const product_controller_1 = require("./product.controller");
 const auth_middleware_1 = require("../auth/auth.middleware"); // Import the middleware
@@ -19,5 +10,5 @@ router.put("/:id", auth_middleware_1.isAuthenticated, product_controller_1.Produ
 router.delete("/:id", auth_middleware_1.isAuthenticated, product_controller_1.ProductController.delete); // Only admins can delete products
 // Public access to find all products and find by id
 router.get("/", product_controller_1.ProductController.findAll);
-router.get("/:id", product_controller_1.ProductController.findById);
+router.get("/search", product_controller_1.ProductController.search);
 exports.default = router;

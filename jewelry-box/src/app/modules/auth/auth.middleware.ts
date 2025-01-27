@@ -19,3 +19,20 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     return; // End the middleware execution here
   }
 };
+
+
+
+export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.user?.role !== "admin") {
+    res.status(403).json({ message: "Access denied. Admins only." });
+    return;
+  }
+
+  next(); // Proceed to the next middleware or route handler
+};
+
+
+export const generateToken = (userId: string, role: string): string => {
+  const secretKey = process.env.JWT_SECRET || "default_secret";
+  return jwt.sign({ id: userId, role }, secretKey, { expiresIn: "1d" });
+};

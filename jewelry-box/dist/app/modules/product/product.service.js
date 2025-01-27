@@ -43,32 +43,23 @@ exports.ProductService = {
             }
         }
     }),
-    //   findById: async (id: string) => {
-    //     try {
-    //       // Find the product by ID in MongoDB
-    //       const product = await ProductModel.findById(id);
-    //       return product;  // If product is found, return it
-    //     } catch (error) {
-    //       throw new Error("Error fetching product: " + error.message);  // Handle errors
-    //     }
-    //   },
-    findById: (id) => __awaiter(void 0, void 0, void 0, function* () {
+    search: (keyword) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            // Find the product by ID in MongoDB
-            const product = yield Product_1.default.findById(id);
-            if (!product) {
-                throw new Error("Product not found");
-            }
-            return product; // Return the product if found
+            const products = yield Product_1.default.find({
+                $or: [
+                    { name: { $regex: keyword, $options: "i" } },
+                    { category: { $regex: keyword, $options: "i" } },
+                ],
+            });
+            return products;
         }
         catch (error) {
-            // Type-check the error to access `message` property
+            // Type `error` as `Error` to access `message` and other properties
             if (error instanceof Error) {
-                throw new Error("Error fetching product: " + error.message);
+                throw new Error("Error fetching products: " + error.message);
             }
-            else {
-                throw new Error("Unknown error occurred while fetching product");
-            }
+            // Handle other types of error (if needed)
+            throw new Error("An unknown error occurred while fetching products.");
         }
     }),
     update: (id, updateData) => __awaiter(void 0, void 0, void 0, function* () {

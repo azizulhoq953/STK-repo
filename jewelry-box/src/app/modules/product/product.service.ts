@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import ProductModel from "../../models/Product";  // Use default import
 
 export const ProductService = {
@@ -25,8 +26,14 @@ export const ProductService = {
         throw new Error("Unknown error occurred while fetching products.");
       }
     }
+  }, findById: async (id: string) => {
+    try {
+      const product = await ProductModel.findById(id);  // Find the product by ID
+      return product;
+    } catch (error) {
+      throw new Error("Error finding product: " + error.message);
+    }
   },
- 
 
   search: async (keyword: string) => {
     try {

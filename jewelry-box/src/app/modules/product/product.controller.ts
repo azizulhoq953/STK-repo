@@ -22,6 +22,22 @@ export const ProductController = {
     }
   },
 
+  findById: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const productId = req.params.id;  // Get the product ID from the request parameters
+
+      const product = await ProductService.findById(productId);  // Call service to get product
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      return res.status(200).json(product);
+    } catch (error) {
+      next(error);  // Pass the error to the global error handler
+    }
+  },
+
   update: async (req: Request, res: Response) => {
     try {
       const product = await ProductService.update(req.params.id, req.body);
@@ -41,21 +57,7 @@ export const ProductController = {
       res.status(500).json({ error: errorMessage });
     }
   },
-  // search: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     const keyword = req.query.keyword as string;
-
-  //     if (!keyword) {
-  //       res.status(400).json({ message: "Please provide a search keyword." });
-  //       return;
-  //     }
-
-  //     const products = await ProductService.search(keyword);
-  //     res.status(200).json(products);
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // },
+ 
   search: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const keyword = req.query.keyword as string;
