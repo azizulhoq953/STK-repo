@@ -1,3 +1,4 @@
+// ProductController.controller.ts 
 import { NextFunction, Request, Response } from "express";
 import { ProductService } from "./product.service";
 

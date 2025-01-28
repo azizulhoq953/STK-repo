@@ -1,4 +1,5 @@
 "use strict";
+// Product.service.ts 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductService = void 0;
+const mongoose_1 = require("mongoose");
 const Product_1 = __importDefault(require("../../models/Product")); // Use default import
 exports.ProductService = {
     create: (productData) => __awaiter(void 0, void 0, void 0, function* () {
@@ -41,6 +43,27 @@ exports.ProductService = {
             else {
                 throw new Error("Unknown error occurred while fetching products.");
             }
+        }
+    }),
+    findById: (id) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            // Check if the id is a valid ObjectId
+            if (!mongoose_1.Types.ObjectId.isValid(id)) {
+                throw new Error("Invalid product ID.");
+            }
+            // Query the database for the product
+            const product = yield Product_1.default.findById(id);
+            // If no product is found
+            if (!product) {
+                throw new Error("Product not found.");
+            }
+            return product;
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new Error("Error fetching product: " + error.message);
+            }
+            throw new Error("An unknown error occurred while fetching the product.");
         }
     }),
     search: (keyword) => __awaiter(void 0, void 0, void 0, function* () {

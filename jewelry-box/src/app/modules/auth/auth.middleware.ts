@@ -8,16 +8,17 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     res.status(401).json({ message: "No token provided, authorization denied" }); // Send response
     return; // End the middleware execution here
   }
-
+  const secretKey = process.env.JWT_SECRET || "default_secret";
   try {
-    const secretKey = process.env.JWT_SECRET || "default_secret";
-    const decoded = jwt.verify(token, secretKey);
-    req.user = decoded; // Attach decoded user info to the request object
-    next(); // Proceed to next middleware or route handler
+    const decoded = jwt.verify(token, secretKey) as { userId: string; role?: string };
+    console.log("Decoded Token:", decoded);
+    req.user = { id: decoded.userId, role: decoded.role };
+    next();
   } catch (error) {
-    res.status(401).json({ message: "Invalid token" }); // Send response
-    return; // End the middleware execution here
+    console.log("Token verification error:", error);
+    res.status(401).json({ message: "Invalid token" });
   }
+
 };
 
 
