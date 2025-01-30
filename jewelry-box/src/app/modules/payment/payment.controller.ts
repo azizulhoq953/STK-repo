@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Stripe from "stripe";
 import UserModel from "../../models/user.model";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import httpStatus from "http-status";
 import PaymentModel from "../../models/payment.model";

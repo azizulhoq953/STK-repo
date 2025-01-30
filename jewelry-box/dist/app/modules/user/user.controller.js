@@ -18,25 +18,12 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const Product_1 = __importDefault(require("../../models/Product"));
+const catchAsync_1 = __importDefault(require("../../shared/catchAsync"));
+const passwordReset_service_1 = __importDefault(require("./passwordReset.service"));
+const sendResponse_1 = __importDefault(require("../../shared/sendResponse"));
 // import { CartService } from "../product/cart.service";
 // import { OrderService } from "../product/order.service";
 exports.UserController = {
-    // register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    //   try {
-    //     const { username, email, phoneNumber,businessName, password, confirmPassword } = req.body;
-    //     const existingUser = await UserModel.findOne({ email });
-    //     if (existingUser) {
-    //       res.status(400).json({ message: "User already exists" });
-    //       return;
-    //     }
-    //     const hashedPassword = await bcrypt.hash(password, 10);
-    //     const newUser = new UserModel({ username, email,phoneNumber,businessName, password: hashedPassword, confirmPassword  });
-    //     await newUser.save();
-    //     res.status(201).json({ message: "User registered successfully" });
-    //   } catch (error) {
-    //     next(error); // Pass error to middleware
-    //   }
-    // },
     register: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { username, email, phoneNumber, businessName, password, confirmPassword } = req.body;
@@ -83,6 +70,35 @@ exports.UserController = {
             next(error); // Pass error to middleware
         }
     }),
+    forgotPassword: (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const result = yield passwordReset_service_1.default.forgotPassword(req.body.email);
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Password reset email sent successfully',
+            data: result
+        });
+    })),
+    resetPassword: (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const { token, newPassword } = req.body;
+        const result = yield passwordReset_service_1.default.resetPassword(token, newPassword);
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Password reset successful',
+            data: result
+        });
+    })),
+    verifyResetToken: (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        const { token } = req.params;
+        const result = yield passwordReset_service_1.default.verifyResetToken(token);
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Token verification successful',
+            data: result
+        });
+    })),
     //getallusers
     getTotalUsers: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {

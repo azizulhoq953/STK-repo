@@ -5,28 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateToken = exports.isAdmin = exports.isAuthenticated = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// export const isAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
-//   const token = req.headers.authorization?.split(" ")[1];
-//   if (!token) {
-//     res.status(401).json({ message: "No token provided, authorization denied" });
-//     return;
-//   }
-//   const secretKey = process.env.JWT_SECRET || "default_secret";
-//   try {
-//     // Verify and decode the token
-//     const decoded = jwt.verify(token, secretKey) as JWTPayload;
-//     console.log("✅ Decoded Token:", decoded);
-//     // Set req.user with decoded information
-//     req.user = {
-//       username: decoded.username,
-//       role: decoded.role
-//     };
-//     next();
-//   } catch (error) {
-//     console.log("❌ Token verification error:", error);
-//     res.status(401).json({ message: "Invalid token" });
-//   }
-// };
 const isAuthenticated = (req, res, next) => {
     var _a;
     const token = (_a = req.headers['authorization']) === null || _a === void 0 ? void 0 : _a.split(" ")[1];

@@ -25,3 +25,16 @@ exports.AuthController = {
         }
     }),
 };
+// exports.forgotPassword = async (req: { body: { email: any; }; }, res: any, next: (arg0: Error) => void) => {
+//   //get user based on posted email
+//   const user = await User.findOne({ email: req.body.email });
+//   if (!user) {
+//     const error = new Error('There is no user with email address');
+//     return next(error);
+//   }
+//   //generate random reset token
+//   const resetToken = user.passwordResetToken;
+//   await user.save();
+// }
+// export const resetPassword = (req: Request, res: Response, next: NextFunction) => {
+// }

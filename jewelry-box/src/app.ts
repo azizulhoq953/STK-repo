@@ -18,13 +18,14 @@ const app = express();
 app.use(bodyParser.json());
 app.use("/api", router);
 app.use("/api", orderRoutes);
-app.use("/api/users", userRoutes);
+// app.use("/api/users", userRoutes);
 app.use("/api/auth/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", adminProfileRouter);
+app.use('/api/users', userRoutes);
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), PaymentController.handleWebhook);
 app.use((req, res, next) => {
   console.log(`Request Method: ${req.method}, Request URL: ${req.url}`);
@@ -36,5 +37,7 @@ app.use((req, res, next) => {
     console.log(`Request Method: ${req.method}, Request URL: ${req.url}`);
     next();
   });
+
+
   
 export default app;

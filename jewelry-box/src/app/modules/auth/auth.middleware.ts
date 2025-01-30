@@ -1,34 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWTPayload } from './auth.types';
-
-// export const isAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
-//   const token = req.headers.authorization?.split(" ")[1];
-  
-//   if (!token) {
-//     res.status(401).json({ message: "No token provided, authorization denied" });
-//     return;
-//   }
-
-//   const secretKey = process.env.JWT_SECRET || "default_secret";
-  
-//   try {
-//     // Verify and decode the token
-//     const decoded = jwt.verify(token, secretKey) as JWTPayload;
-//     console.log("✅ Decoded Token:", decoded);
-    
-//     // Set req.user with decoded information
-//     req.user = {
-//       username: decoded.username,
-//       role: decoded.role
-//     };
-    
-//     next();
-//   } catch (error) {
-//     console.log("❌ Token verification error:", error);
-//     res.status(401).json({ message: "Invalid token" });
-//   }
-// };
 
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
   const token = (req.headers as Record<string, string>)['authorization']?.split(" ")[1];

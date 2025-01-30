@@ -6,30 +6,15 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import ProductModel from "../../models/Product";
 import { get } from "http";
+import catchAsync from "../../shared/catchAsync";
+import passwordResetService from "./passwordReset.service";
+import sendResponse from "../../shared/sendResponse";
+import { ForgotPasswordRequest, ResetPasswordRequest, VerifyTokenRequest } from "./user.validation";
 
 // import { CartService } from "../product/cart.service";
 // import { OrderService } from "../product/order.service";
 
 export const UserController = {
-  // register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     const { username, email, phoneNumber,businessName, password, confirmPassword } = req.body;
-
-  //     const existingUser = await UserModel.findOne({ email });
-  //     if (existingUser) {
-  //       res.status(400).json({ message: "User already exists" });
-  //       return;
-  //     }
-
-  //     const hashedPassword = await bcrypt.hash(password, 10);
-  //     const newUser = new UserModel({ username, email,phoneNumber,businessName, password: hashedPassword, confirmPassword  });
-
-  //     await newUser.save();
-  //     res.status(201).json({ message: "User registered successfully" });
-  //   } catch (error) {
-  //     next(error); // Pass error to middleware
-  //   }
-  // },
 
   register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -86,6 +71,44 @@ export const UserController = {
     }
   },
   
+  
+  forgotPassword: catchAsync(async (req: Request<{}, {}, ForgotPasswordRequest>, res: Response) => {
+    const result = await passwordResetService.forgotPassword(req.body.email);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Password reset email sent successfully',
+      data: result
+    });
+  }),
+
+  resetPassword: catchAsync(async (req: Request<{}, {}, ResetPasswordRequest>, res: Response) => {
+    const { token, newPassword } = req.body;
+    
+    const result = await passwordResetService.resetPassword(token, newPassword);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Password reset successful',
+      data: result
+    });
+  }),
+
+  verifyResetToken: catchAsync(async (req: Request, res: Response) => {
+    const { token } = req.params;
+    
+    const result = await passwordResetService.verifyResetToken(token);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Token verification successful',
+      data: result
+    });
+  }),
+
 //getallusers
 getTotalUsers: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {

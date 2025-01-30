@@ -32,23 +32,70 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Define the schema for the user model
+const crypto_1 = __importDefault(require("crypto"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserSchema = new mongoose_1.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     phoneNumber: { type: String, required: true },
     businessName: { type: String, required: true },
     password: { type: String, required: true },
-    cart: [
-        {
+    cart: [{
             productId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Product", required: true },
             quantity: { type: Number, required: true, min: 1 },
-        },
-    ],
+        }],
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetTokenExpires: Date,
 });
-// Create the User model from the schema
+// Generate password reset token
+UserSchema.methods.generatePasswordReset = function () {
+    // Generate a random token and hash it
+    const resetToken = crypto_1.default.randomBytes(32).toString('hex');
+    this.passwordResetToken = crypto_1.default.createHash('sha256').update(resetToken).digest('hex');
+    this.passwordResetTokenExpires = Date.now() + 10 * 60 * 100; // 10 minutes
+    console.log(resetToken, this.passwordResetToken);
+    return resetToken;
+};
+// Reset password
+UserSchema.methods.resetPassword = function (password) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Hash the new password
+        const salt = yield bcrypt_1.default.genSalt(10);
+        this.password = yield bcrypt_1.default.hash(password, salt);
+        // Clear reset token fields
+        this.resetPasswordToken = undefined;
+        this.resetPasswordExpires = undefined;
+    });
+};
+// Add pre-save hook to hash password when modified
+UserSchema.pre('save', function (next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!this.isModified('password'))
+            return next();
+        try {
+            const salt = yield bcrypt_1.default.genSalt(10);
+            this.password = yield bcrypt_1.default.hash(this.password, salt);
+            next();
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+});
 const UserModel = mongoose_1.default.model("User", UserSchema);
-// Export the model as default
 exports.default = UserModel;

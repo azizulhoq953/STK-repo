@@ -10,7 +10,8 @@ router.post('/register', UserController.register);
 
 // Login user route
 router.post('/login', UserController.login);
-
+router.post('/forgot-password', UserController.forgotPassword);
+router.post('/reset-password', UserController.resetPassword);
 router.get("/count", isAuthenticated, UserController.getTotalUsers);
 router.post("/cart", isAuthenticated, UserController.addToCart);
 router.put("/cart", isAuthenticated, UserController.updateCart);
