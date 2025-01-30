@@ -15,8 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentController = void 0;
 const stripe_1 = __importDefault(require("stripe"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const http_status_1 = __importDefault(require("http-status"));
 const payment_model_1 = __importDefault(require("../../models/payment.model"));
 const order_model_1 = __importDefault(require("../../models/order.model"));
+const appError_1 = __importDefault(require("../../../utils/appError")); // Adjust the path as necessary
 dotenv_1.default.config(); // Make sure .env variables are loaded
 // Stripe initialization with the correct API version
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || "", {
@@ -67,10 +69,10 @@ exports.PaymentController = {
             let event;
             try {
                 event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-                console.log("🔔 Webhook received:", event.type);
+                console.log("Webhook received:", event.type);
             }
             catch (err) {
-                console.error("❌ Webhook signature verification failed:", err);
+                console.error("Webhook signature verification failed:", err);
                 res.status(400).json({ message: `Webhook Error: ${err.message}` });
                 return;
             }
@@ -80,27 +82,27 @@ exports.PaymentController = {
                 const userId = paymentIntent.metadata.userId;
                 const orderId = paymentIntent.metadata.orderId;
                 if (!userId || !orderId) {
-                    console.error("⚠️ Missing userId or orderId in metadata.");
+                    console.error("Missing userId or orderId in metadata.");
                     res.status(400).json({ message: "Missing metadata in payment intent." });
                     return;
                 }
                 // Confirm Order Exists
                 const order = yield order_model_1.default.findById(orderId);
                 if (!order) {
-                    console.error("❌ Order not found.");
+                    console.error("Order not found.");
                     res.status(404).json({ message: "Order not found." });
                     return;
                 }
                 // Update Payment Record (Ensure paymentIntentId is stored in DB)
-                yield payment_model_1.default.findOneAndUpdate({ paymentIntentId: paymentIntent.id }, { status: "succeeded" }, { new: true });
+                yield payment_model_1.default.findOneAndUpdate({ paymentIntentId: paymentIntent.id }, { status: "Completed" }, { new: true });
                 // Update Order Payment Status
-                const updatedOrder = yield order_model_1.default.findByIdAndUpdate(orderId, { paymentStatus: "Completed" }, { new: true });
-                if (!updatedOrder) {
-                    console.error("❌ Failed to update order payment status.");
+                const updatePaymentStatus = yield order_model_1.default.findByIdAndUpdate(orderId, { paymentStatus: "Completed" }, { new: true });
+                if (!updatePaymentStatus) {
+                    console.error("Failed to update order payment status.");
                     res.status(500).json({ message: "Order update failed." });
                     return;
                 }
-                console.log("✅ Order updated successfully:", updatedOrder);
+                console.log("✅ Order updated successfully:", updatePaymentStatus);
                 res.json({ received: true, message: "Payment successful, order updated." });
             }
             else {
@@ -109,8 +111,22 @@ exports.PaymentController = {
             }
         }
         catch (error) {
-            console.error("❌ Error handling webhook:", error);
+            console.error("Error handling webhook:", error);
             next(error);
+        }
+    }),
+    paymentConfirmation: (payload) => __awaiter(void 0, void 0, void 0, function* () {
+        const paymentIntent = yield stripe.paymentIntents.retrieve(payload.transactionId);
+        console.log({ paymentIntent });
+        if (!paymentIntent.amount_received) {
+            throw new appError_1.default(http_status_1.default.BAD_REQUEST, 'Payment failed');
+        }
+        // Update Order Payment Status
+        const updatePayment = yield order_model_1.default.findOneAndUpdate({ client_secret: payload.client_secret }, // Ensure field matches your schema
+        { paymentStatus: payload.status }, // Update payment status
+        { new: true });
+        if (!updatePayment) {
+            throw new appError_1.default(http_status_1.default.NOT_FOUND, 'Payment not found with provided transactionId');
         }
     }),
     // Admin Route to View All Payments

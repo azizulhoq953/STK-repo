@@ -12,7 +12,7 @@ const PaymentSchema = new Schema<IPayment>({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   amount: { type: Number, required: true },
   paymentIntentId: { type: String, required: true },
-  status: { type: String, enum: ["pending", "succeeded", "failed"], default: "pending" },
+  status: { type: String, enum: ["pending", "Completed", "failed"], default: "pending" },
   createdAt: { type: Date, default: Date.now },
 });
 

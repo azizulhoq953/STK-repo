@@ -38,7 +38,7 @@ const PaymentSchema = new mongoose_1.Schema({
     userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
     amount: { type: Number, required: true },
     paymentIntentId: { type: String, required: true },
-    status: { type: String, enum: ["pending", "succeeded", "failed"], default: "pending" },
+    status: { type: String, enum: ["pending", "Completed", "failed"], default: "pending" },
     createdAt: { type: Date, default: Date.now },
 });
 const PaymentModel = mongoose_1.default.model("Payment", PaymentSchema);

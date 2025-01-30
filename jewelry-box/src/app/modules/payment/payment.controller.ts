@@ -3,9 +3,17 @@ import Stripe from "stripe";
 import UserModel from "../../models/user.model";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import httpStatus from "http-status";
 import PaymentModel from "../../models/payment.model";
 import OrderModel from "../../models/order.model";
+import AppError from "../../../utils/appError"; // Adjust the path as necessary
 dotenv.config(); // Make sure .env variables are loaded
+
+interface IPayment {
+  transactionId: string;
+  client_secret: string;
+  status: string;
+}
 
 // Stripe initialization with the correct API version
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -61,9 +69,9 @@ export const PaymentController = {
       let event: Stripe.Event;
       try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-        console.log("🔔 Webhook received:", event.type);
+        console.log("Webhook received:", event.type);
       } catch (err) {
-        console.error("❌ Webhook signature verification failed:", err);
+        console.error("Webhook signature verification failed:", err);
         res.status(400).json({ message: `Webhook Error: ${(err as Error).message}` });
         return;
       }
@@ -76,7 +84,7 @@ export const PaymentController = {
         const orderId = paymentIntent.metadata.orderId; 
   
         if (!userId || !orderId) {
-          console.error("⚠️ Missing userId or orderId in metadata.");
+          console.error("Missing userId or orderId in metadata.");
           res.status(400).json({ message: "Missing metadata in payment intent." });
           return;
         }
@@ -84,7 +92,7 @@ export const PaymentController = {
         // Confirm Order Exists
         const order = await OrderModel.findById(orderId);
         if (!order) {
-          console.error("❌ Order not found.");
+          console.error("Order not found.");
           res.status(404).json({ message: "Order not found." });
           return;
         }
@@ -92,24 +100,24 @@ export const PaymentController = {
         // Update Payment Record (Ensure paymentIntentId is stored in DB)
         await PaymentModel.findOneAndUpdate(
           { paymentIntentId: paymentIntent.id },
-          { status: "succeeded" },
+          { status: "Completed" },
           { new: true }
         );
   
         // Update Order Payment Status
-        const updatedOrder = await OrderModel.findByIdAndUpdate(
+        const updatePaymentStatus = await OrderModel.findByIdAndUpdate(
           orderId,
           { paymentStatus: "Completed" },
           { new: true }
         );
   
-        if (!updatedOrder) {
-          console.error("❌ Failed to update order payment status.");
+        if (!updatePaymentStatus) {
+          console.error("Failed to update order payment status.");
           res.status(500).json({ message: "Order update failed." });
           return;
         }
   
-        console.log("✅ Order updated successfully:", updatedOrder);
+        console.log("✅ Order updated successfully:", updatePaymentStatus);
   
         res.json({ received: true, message: "Payment successful, order updated." });
       } else {
@@ -117,8 +125,33 @@ export const PaymentController = {
         res.json({ received: true });
       }
     } catch (error) {
-      console.error("❌ Error handling webhook:", error);
+      console.error("Error handling webhook:", error);
       next(error);
+    }
+  },
+
+  paymentConfirmation: async (payload: IPayment) => {
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      payload.transactionId,
+    );
+    console.log({ paymentIntent });
+  
+    if (!paymentIntent.amount_received) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Payment failed');
+    }
+  
+    // Update Order Payment Status
+    const updatePayment = await OrderModel.findOneAndUpdate(
+      { client_secret: payload.client_secret }, // Ensure field matches your schema
+      { paymentStatus: payload.status }, // Update payment status
+      { new: true },
+    );
+  
+    if (!updatePayment) {
+      throw new AppError(
+        httpStatus.NOT_FOUND,
+        'Payment not found with provided transactionId',
+      );
     }
   },
   
@@ -130,14 +163,14 @@ export const PaymentController = {
         res.status(403).json({ message: "Access denied" });
         return;
       }
-
+  
       // Fetch all payments made by users
       const payments = await PaymentModel.find().populate('userId');
       if (!payments) {
         res.status(404).json({ message: "No payments found." });
         return;
       }
-
+  
       res.status(200).json({
         payments,
         message: "Payments fetched successfully.",
