@@ -5,34 +5,64 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import ProductModel from "../../models/Product";
+import { get } from "http";
 
 // import { CartService } from "../product/cart.service";
 // import { OrderService } from "../product/order.service";
 
 export const UserController = {
+  // register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const { username, email, phoneNumber,businessName, password, confirmPassword } = req.body;
+
+  //     const existingUser = await UserModel.findOne({ email });
+  //     if (existingUser) {
+  //       res.status(400).json({ message: "User already exists" });
+  //       return;
+  //     }
+
+  //     const hashedPassword = await bcrypt.hash(password, 10);
+  //     const newUser = new UserModel({ username, email,phoneNumber,businessName, password: hashedPassword, confirmPassword  });
+
+  //     await newUser.save();
+  //     res.status(201).json({ message: "User registered successfully" });
+  //   } catch (error) {
+  //     next(error); // Pass error to middleware
+  //   }
+  // },
+
   register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { name, email, password } = req.body;
-
+      const { username, email, phoneNumber, businessName, password, confirmPassword } = req.body;
+  
+      // Check if passwords match
+      if (password !== confirmPassword) {
+        res.status(400).json({ message: "Confirm password does not match" });
+        return;
+      }
+  
+      // Check if the user already exists
       const existingUser = await UserModel.findOne({ email });
       if (existingUser) {
         res.status(400).json({ message: "User already exists" });
         return;
       }
-
+  
+      // Hash the password before saving
       const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new UserModel({ name, email, password: hashedPassword });
-
+      const newUser = new UserModel({ username, email, phoneNumber, businessName, password: hashedPassword });
+  
       await newUser.save();
       res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
       next(error); // Pass error to middleware
     }
   },
+  
 
   login: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { userId,email, password } = req.body;
+      const { email, password } = req.body;
 
       const user = await UserModel.findOne({ email });
       if (!user) {
@@ -55,6 +85,24 @@ export const UserController = {
       next(error); // Pass error to middleware
     }
   },
+  
+//getallusers
+getTotalUsers: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Find all users and select only their email field
+    const users = await UserModel.find({}, "email");
+
+    // Get the total number of users
+    const totalUsers = users.length;
+
+    res.json({
+      totalUsers,
+      users: users.map(user => user.email),  // Return only emails
+    });
+  } catch (error) {
+    next(error); // Pass error to middleware
+  }
+},
 
 
 addToCart: async (req: Request, res: Response, next: NextFunction): Promise<void> => {

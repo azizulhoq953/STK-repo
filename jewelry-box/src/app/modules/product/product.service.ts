@@ -29,28 +29,9 @@ export const ProductService = {
       }
     }
   },
+  
   findById: async (id: string) => {
-    try {
-      // Check if the id is a valid ObjectId
-      if (!Types.ObjectId.isValid(id)) {
-        throw new Error("Invalid product ID.");
-      }
-
-      // Query the database for the product
-      const product = await ProductModel.findById(id);
-
-      // If no product is found
-      if (!product) {
-        throw new Error("Product not found.");
-      }
-
-      return product;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error("Error fetching product: " + error.message);
-      }
-      throw new Error("An unknown error occurred while fetching the product.");
-    }
+    return await ProductModel.findById(id);
   },
 
   search: async (keyword: string) => {

@@ -9,6 +9,7 @@ const router = (0, express_1.Router)();
 router.post('/register', user_controller_1.UserController.register);
 // Login user route
 router.post('/login', user_controller_1.UserController.login);
+router.get("/count", auth_middleware_1.isAuthenticated, user_controller_1.UserController.getTotalUsers);
 router.post("/cart", auth_middleware_1.isAuthenticated, user_controller_1.UserController.addToCart);
 router.put("/cart", auth_middleware_1.isAuthenticated, user_controller_1.UserController.updateCart);
 router.delete("/cart", auth_middleware_1.isAuthenticated, user_controller_1.UserController.deleteCartItem);

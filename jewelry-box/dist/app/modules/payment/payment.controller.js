@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentController = void 0;
 const stripe_1 = __importDefault(require("stripe"));
-const user_model_1 = __importDefault(require("../../models/user.model"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const payment_model_1 = __importDefault(require("../../models/payment.model"));
+const order_model_1 = __importDefault(require("../../models/order.model"));
 dotenv_1.default.config(); // Make sure .env variables are loaded
 // Stripe initialization with the correct API version
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || "", {
@@ -25,25 +25,26 @@ const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || "", {
 exports.PaymentController = {
     processPayment: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            const { orderId } = req.body; // Get orderId from request
             const userId = req.user.id;
-            // Fetch user and their cart
-            const user = yield user_model_1.default.findById(userId).populate("cart.productId");
-            if (!user || user.cart.length === 0) {
-                res.status(400).json({ message: "Cart is empty or user not found." });
+            // Validate order exists
+            const order = yield order_model_1.default.findById(orderId);
+            if (!order) {
+                res.status(404).json({ message: "Order not found." });
                 return;
             }
-            // Calculate total amount
-            const totalAmount = user.cart.reduce((sum, item) => {
-                const product = item.productId;
-                return sum + product.price * item.quantity;
-            }, 0);
-            // Create a payment intent
+            if (order.paymentStatus === "Completed") {
+                res.status(400).json({ message: "Order is already paid." });
+                return;
+            }
+            // Create Stripe Payment Intent
             const paymentIntent = yield stripe.paymentIntents.create({
-                amount: totalAmount * 100, // Convert to cents
+                amount: order.totalAmount * 100, // Convert to cents
                 currency: "usd",
                 payment_method_types: ["card"],
                 metadata: {
                     userId: userId,
+                    orderId: orderId.toString(),
                 },
             });
             res.status(200).json({
@@ -59,29 +60,56 @@ exports.PaymentController = {
         try {
             const sig = req.headers["stripe-signature"];
             const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+            if (!sig || !endpointSecret) {
+                res.status(400).json({ message: "Missing Stripe signature or webhook secret." });
+                return;
+            }
             let event;
             try {
                 event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+                console.log("🔔 Webhook received:", event.type);
             }
             catch (err) {
-                const errorMessage = err.message;
-                res.status(400).json({ message: `Webhook error: ${errorMessage}` });
+                console.error("❌ Webhook signature verification failed:", err);
+                res.status(400).json({ message: `Webhook Error: ${err.message}` });
                 return;
             }
-            // Handle the event
             if (event.type === "payment_intent.succeeded") {
                 const paymentIntent = event.data.object;
+                console.log("✅ Payment Intent Succeeded:", paymentIntent.id);
                 const userId = paymentIntent.metadata.userId;
-                // Clear user cart and save order
-                const user = yield user_model_1.default.findById(userId);
-                if (user) {
-                    user.cart = [];
-                    yield user.save();
+                const orderId = paymentIntent.metadata.orderId;
+                if (!userId || !orderId) {
+                    console.error("⚠️ Missing userId or orderId in metadata.");
+                    res.status(400).json({ message: "Missing metadata in payment intent." });
+                    return;
                 }
+                // Confirm Order Exists
+                const order = yield order_model_1.default.findById(orderId);
+                if (!order) {
+                    console.error("❌ Order not found.");
+                    res.status(404).json({ message: "Order not found." });
+                    return;
+                }
+                // Update Payment Record (Ensure paymentIntentId is stored in DB)
+                yield payment_model_1.default.findOneAndUpdate({ paymentIntentId: paymentIntent.id }, { status: "succeeded" }, { new: true });
+                // Update Order Payment Status
+                const updatedOrder = yield order_model_1.default.findByIdAndUpdate(orderId, { paymentStatus: "Completed" }, { new: true });
+                if (!updatedOrder) {
+                    console.error("❌ Failed to update order payment status.");
+                    res.status(500).json({ message: "Order update failed." });
+                    return;
+                }
+                console.log("✅ Order updated successfully:", updatedOrder);
+                res.json({ received: true, message: "Payment successful, order updated." });
             }
-            res.json({ received: true });
+            else {
+                console.log(`ℹ️ Unhandled event type: ${event.type}`);
+                res.json({ received: true });
+            }
         }
         catch (error) {
+            console.error("❌ Error handling webhook:", error);
             next(error);
         }
     }),

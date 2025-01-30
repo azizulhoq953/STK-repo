@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { number } from "zod";
 
 // Define CartItem interface for items in the cart
 interface CartItem {
@@ -7,16 +8,20 @@ interface CartItem {
 }
 // Extending IUser interface for cart functionality
 interface IUser extends Document {
-  name: string;
+  username: string;
   email: string;
+  phoneNumber: string;
+  businessName: string;
   password: string;
   cart: CartItem[];
 }
 
 // Define the schema for the user model
 const UserSchema = new Schema<IUser>({
-  name: { type: String, required: true },
+  username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  phoneNumber: { type: String, required: true },
+  businessName: { type: String, required: true },
   password: { type: String, required: true },
   cart: [
     {

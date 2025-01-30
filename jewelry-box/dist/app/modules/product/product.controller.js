@@ -34,15 +34,16 @@ exports.ProductController = {
     }),
     findById: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const productId = req.params.id; // Get the product ID from the request parameters
-            const product = yield product_service_1.ProductService.findById(productId); // Call service to get product
+            const productId = req.params.id;
+            const product = yield product_service_1.ProductService.findById(productId);
             if (!product) {
-                return res.status(404).json({ message: "Product not found" });
+                res.status(404).json({ message: "Product not found" });
+                return;
             }
-            return res.status(200).json(product);
+            res.status(200).json(product);
         }
         catch (error) {
-            next(error); // Pass the error to the global error handler
+            next(error);
         }
     }),
     update: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -68,13 +69,12 @@ exports.ProductController = {
     search: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const keyword = req.query.keyword;
-            if (!keyword) {
-                res.status(400).json({ message: "Please provide a search keyword." });
+            if (!keyword || typeof keyword !== "string") {
+                res.status(400).json({ message: "Please provide a valid search keyword." });
                 return;
             }
-            // Use the `name` or other relevant fields for the search query
             const products = yield product_service_1.ProductService.search(keyword);
-            if (products.length === 0) {
+            if (!products.length) {
                 res.status(404).json({ message: "No products found." });
                 return;
             }

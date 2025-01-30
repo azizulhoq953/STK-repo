@@ -17,14 +17,13 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const adminData = {
     username: "admin",
-    password: bcrypt_1.default.hashSync("admin123", 10), // Predefined hashed password
+    password: bcrypt_1.default.hashSync("admin123", 10),
 };
 exports.AuthService = {
     authenticate: (username, password) => __awaiter(void 0, void 0, void 0, function* () {
         if (username === adminData.username && bcrypt_1.default.compareSync(password, adminData.password)) {
-            const token = jsonwebtoken_1.default.sign({ username }, process.env.JWT_SECRET || "secret", {
-                expiresIn: "1d",
-            });
+            const payload = { username, role: "admin" };
+            const token = jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET || "default_secret", { expiresIn: "1d" });
             return { token };
         }
         throw new Error("Invalid credentials");

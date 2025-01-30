@@ -10,6 +10,6 @@ router.put("/:id", auth_middleware_1.isAuthenticated, product_controller_1.Produ
 router.delete("/:id", auth_middleware_1.isAuthenticated, product_controller_1.ProductController.delete); // Only admins can delete products
 // Public access to find all products and find by id
 router.get("/", product_controller_1.ProductController.findAll);
-// router.get("/:id", ProductController.findById);
+router.get("/products/:id", product_controller_1.ProductController.findById);
 router.get("/search", product_controller_1.ProductController.search);
 exports.default = router;

@@ -5,12 +5,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateToken = exports.isAdmin = exports.isAuthenticated = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+// export const isAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
+//   const token = req.headers.authorization?.split(" ")[1];
+//   if (!token) {
+//     res.status(401).json({ message: "No token provided, authorization denied" });
+//     return;
+//   }
+//   const secretKey = process.env.JWT_SECRET || "default_secret";
+//   try {
+//     // Verify and decode the token
+//     const decoded = jwt.verify(token, secretKey) as JWTPayload;
+//     console.log("✅ Decoded Token:", decoded);
+//     // Set req.user with decoded information
+//     req.user = {
+//       username: decoded.username,
+//       role: decoded.role
+//     };
+//     next();
+//   } catch (error) {
+//     console.log("❌ Token verification error:", error);
+//     res.status(401).json({ message: "Invalid token" });
+//   }
+// };
 const isAuthenticated = (req, res, next) => {
     var _a;
     const token = (_a = req.headers['authorization']) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
     if (!token) {
-        res.status(401).json({ message: "No token provided, authorization denied" }); // Send response
-        return; // End the middleware execution here
+        res.status(401).json({ message: "No token provided, authorization denied" });
+        return;
     }
     const secretKey = process.env.JWT_SECRET || "default_secret";
     try {
@@ -26,16 +48,24 @@ const isAuthenticated = (req, res, next) => {
 };
 exports.isAuthenticated = isAuthenticated;
 const isAdmin = (req, res, next) => {
-    var _a;
-    if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "admin") {
+    if (!req.user || req.user.role !== 'admin') {
         res.status(403).json({ message: "Access denied. Admins only." });
         return;
     }
-    next(); // Proceed to the next middleware or route handler
+    next();
 };
 exports.isAdmin = isAdmin;
+// export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
+//   console.log("🔍 Checking Admin Role:", req.user); // Debugging log
+//   if (req.user?.role !== "admin") {
+//     console.log("❌ Access denied - User role:", req.user?.role);
+//     res.status(403).json({ message: "Access denied. Admins only." });
+//     return;
+//   }
+//   next(); // Proceed if admin
+// };
 const generateToken = (userId, role) => {
     const secretKey = process.env.JWT_SECRET || "default_secret";
-    return jsonwebtoken_1.default.sign({ id: userId, role }, secretKey, { expiresIn: "1d" });
+    return jsonwebtoken_1.default.sign({ userId, role }, secretKey, { expiresIn: "1d" }); // Ensure `userId` instead of `id`
 };
 exports.generateToken = generateToken;
